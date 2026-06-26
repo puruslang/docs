@@ -1,0 +1,510 @@
+---
+title: Syntax Overview
+description: Overview of Purus syntax.
+sidebar:
+  order: 1
+---
+
+## File Extensions
+
+| Extension | Output | Description |
+|---|---|---|
+| `.purus` | `.js` | Standard JavaScript |
+| `.cpurus` | `.cjs` | CommonJS module |
+| `.mpurus` | `.mjs` | ES Module |
+
+## Comments
+
+```purus
+-- This is a line comment
+
+--- This is a
+block comment ---
+```
+
+## Strings
+
+Purus has two string syntaxes that compile to identical JavaScript output.
+
+### `//;text;//` — Recommended
+
+```purus
+const greeting be //;Hello, World;//
+const url be //;https://api.example.com/v1;//
+const tmpl be //;Hello, [name]!;//
+```
+
+`//;...;//` is the **recommended** syntax. `;` as the delimiter does not conflict with `[expr]` interpolation and avoids visual confusion when content contains `//` (such as URLs).
+
+### `///text///` — Also valid
+
+```purus
+const greeting be ///Hello, World///
+const url be ///https://api.example.com/v1///
+```
+
+`///...///` is fully supported and produces identical output. It is the original syntax and remains valid — use it if you prefer.
+
+:::note
+All examples in this documentation use `//;...;//`. Both forms are interchangeable.
+:::
+
+### Escape sequences
+
+| Escape | Result |
+|---|---|
+| `\n` | Newline |
+| `\t` | Tab |
+| `\\` | Backslash |
+| `\/` | `/` |
+| `\[` | `[` (literal bracket, prevents interpolation) |
+| `\]` | `]` (literal bracket) |
+| `\;` | `;` (literal semicolon, prevents early `;//` close in `//;...;//`) |
+
+### String interpolation
+
+Use `[expr]` inside either string syntax to embed expressions:
+
+```purus
+const name be //;Alice;//
+const age be 30
+const msg be //;Hello, [name]! You are [age] years old.;//
+```
+
+Compiles to:
+
+```js
+const name = "Alice";
+const age = 30;
+const msg = `Hello, ${name}! You are ${age} years old.`;
+```
+
+You can use any expression inside the brackets:
+
+```purus
+const x be 10
+const result be //;[x] times 2 is [x mul 2];//
+```
+
+Compiles to:
+
+```js
+const x = 10;
+const result = `${x} times 2 is ${x * 2}`;
+```
+
+To include a literal `[` or `]` in a string, use the escape sequences `\[` and `\]`.
+
+## Numbers
+
+```purus
+const i be 42
+const f be 3.14
+```
+
+Binary and hexadecimal literals:
+
+```purus
+const mask be 0b1010      -- 10
+const color be 0xFF00FF   -- 16711935
+```
+
+BigInt literals (suffix `n`):
+
+```purus
+const big be 9007199254740993n
+const hex be 0xFFFFFFFFFFFFFFFFn
+const bin be 0b11111111n
+```
+
+BigInt compiles directly to JavaScript BigInt literals.
+
+## Booleans and null
+
+```purus
+const a be true
+const b be false
+const c be null
+const d be nil       -- alias for null
+const e be undefined
+```
+
+## Variables
+
+Variables must always be declared with `const`, `let`, or `var`:
+
+```purus
+const pi be 3.14          -- constant (cannot reassign)
+let count be 0            -- mutable variable
+var legacy be //;old;//   -- var-scoped (discouraged)
+```
+
+Property and index assignment do **not** require a declaration keyword:
+
+```purus
+const obj.x be 10   -- auto-initializes obj = {} if not yet declared
+obj.x be 20         -- reassigns property
+arr[\0] be 99       -- index assignment
+```
+
+:::caution[Bare variable assignment is not supported (since v0.10.x)]
+Assigning to a bare identifier without a declaration keyword is a **compile error**:
+
+```purus
+-- ERROR: bare identifier assignment is not supported
+x be 42
+
+-- OK: use const or let
+const x be 42
+let x be 42
+```
+
+This restriction prevents accidental implicit global variable creation.
+:::
+
+## Separators: `;` vs `,`
+
+Purus has two separators with distinct roles:
+
+| Separator | Usage | JS Output |
+|---|---|---|
+| `;` | Function arguments, function parameters, destructuring | `,` |
+| `,` | Array elements, object properties | `,` |
+
+Both compile to `,` in JavaScript, but they serve different purposes in Purus:
+
+### `;` — Arguments and Parameters
+
+Use `;` to separate **function arguments** when calling functions and **parameters** in function declarations:
+
+```purus
+-- Function parameters
+fn add a; b
+  return a add b
+
+-- Function arguments
+add[1; 2]
+console.log[//;hello;//; //;world;//]
+use p-math as m
+m.max[1; 2; 3]
+
+-- Destructuring
+const [a; b; c] be arr
+const object[name; age] be person
+```
+
+### `,` — Data Separators
+
+Use `,` to separate **array elements** and **object properties**:
+
+```purus
+-- Arrays
+const arr be [1, 2, 3]
+
+-- Objects
+const obj be [name be //;Alice;//, age be 30]
+```
+
+### Why two separators?
+
+Since Purus uses `[]` for both function calls and arrays, the two separators help distinguish between them:
+
+```purus
+-- `;` makes this a function call with 3 arguments
+fn[a; b; c]        -- fn(a, b, c)
+
+-- `,` makes this an array with 3 elements
+[a, b, c]          -- [a, b, c]
+
+-- Nested calls use `;` to separate arguments
+outer[inner[x]; y]  -- outer(inner(x), y)
+```
+
+:::tip
+In array literals, `;` also works as a separator and compiles identically to `,`. However, using `,` for data and `;` for arguments is the recommended convention for readability.
+
+```purus
+const arr be [1; 2; 3]   -- works, same as [1, 2, 3]
+```
+:::
+
+## Arrays
+
+```purus
+const arr be [1, 2, 3]
+const arr2 be [1; 2; 3]   -- semicolons also work
+const empty be []
+```
+
+### Array ranges
+
+```purus
+const inclusive be [0..5]   -- [0, 1, 2, 3, 4, 5]
+const exclusive be [0...5]  -- [0, 1, 2, 3, 4]
+```
+
+### Slicing
+
+Extract a portion of an array using `\` prefix with `..` (inclusive) or `...` (exclusive):
+
+```purus
+const numbers be [0, 1, 2, 3, 4, 5, 6]
+const middle be numbers[\2..5]    -- [2, 3, 4, 5]
+const partial be numbers[\2...5]  -- [2, 3, 4]
+```
+
+Compiles to:
+
+```js
+const middle = numbers.slice(2, 5 + 1);
+const partial = numbers.slice(2, 5);
+```
+
+### Splicing
+
+Replace a portion of an array by assigning to a slice:
+
+```purus
+numbers[\2..4] be [//;a;//; //;b;//; //;c;//]
+-- numbers is now [0, 1, "a", "b", "c", 5, 6]
+```
+
+Compiles to:
+
+```js
+numbers.splice(2, 4 - 2 + 1, "a", "b", "c");
+```
+
+### Destructuring
+
+Extract values from arrays into variables:
+
+```purus
+const weather be [//;Sunny;//; //;Rainy;//]
+const [today; tomorrow] be weather
+
+-- Swap variables
+[today; tomorrow] be [tomorrow; today]
+```
+
+Compiles to:
+
+```js
+const [today, tomorrow] = weather;
+[today, tomorrow] = [tomorrow, today];
+```
+
+## Objects
+
+```purus
+const obj be [name be //;Alice;//, age be 30]
+const empty-obj be [be]    -- empty object
+```
+
+### Object destructuring
+
+Use `object[...]` to destructure properties from an object:
+
+```purus
+const person be [name be //;Alice;//, age be 30]
+const object[name; age] be person
+```
+
+Compiles to:
+
+```js
+const person = { name: "Alice", age: 30 };
+const { name, age } = person;
+```
+
+## Brackets only
+
+Purus uses `[]` for everything — function calls, arrays, objects, and grouping. No `()` or `{}`.
+
+### Computed Access
+
+Use `\` inside brackets to access array indices or object properties by expression:
+
+```purus
+const val be arr[\0]        -- arr[0]
+const item be obj[\key]     -- obj[key]
+const x be matrix[\i][\j]  -- matrix[i][j]
+```
+
+This `\` prefix distinguishes computed access from function calls:
+
+| Syntax | Meaning | JS Output |
+|---|---|---|
+| `f[x]` | Function call | `f(x)` |
+| `arr[\x]` | Computed access | `arr[x]` |
+| `arr[\2..4]` | Slice | `arr.slice(2,5)` |
+
+### Optional Chaining
+
+Use `\.` for optional chaining (JS `?.`):
+
+```purus
+const name be user\.name          -- user?.name
+const val be obj\.method[1; 2]    -- obj?.method(1, 2)
+```
+
+### Multi-line Brackets
+
+Brackets `[...]` can span multiple lines. Newlines and indentation between items are ignored:
+
+```purus
+const items be [
+  1;
+  2;
+  3
+]
+
+const config be [
+  host be //;localhost;//,
+  port be 8080
+]
+
+fetch[url].then[
+  fn response
+    return response.json[]
+].catch[
+  fn err
+    console.error[err]
+]
+```
+
+## Indentation
+
+Blocks are defined by indentation (2 spaces recommended):
+
+```purus
+if x gt 0
+  console.log[//;positive;//]
+else
+  console.log[//;non-positive;//]
+```
+
+## Identifiers
+
+Identifiers can contain hyphens (`-`) and underscores (`_`), which are both converted to underscores in JavaScript output:
+
+```purus
+const my-variable be 42
+-- compiles to: const my_variable = 42;
+
+const my_variable2 be 43
+-- compiles to: const my_variable2 = 43;
+```
+
+Hyphens and underscores are interchangeable — `my-var` and `my_var` refer to the same JavaScript variable (`my_var`). If you need to work with JS libraries that use underscores, you can use either form in Purus.
+
+:::caution
+Since `a-b` and `a_b` both compile to `a_b`, avoid defining both forms in the same scope. They will refer to the same variable.
+:::
+
+## JavaScript Comparison
+
+Purus replaces many JavaScript symbols with words. Here is a quick reference for common JavaScript patterns and their Purus equivalents:
+
+### Template literals (`${}`)
+
+JavaScript uses backticks and `${}` for template literals. Purus uses `///` strings with `[]`:
+
+```purus
+-- JavaScript: `Hello, ${name}! You are ${age} years old.`
+const msg be //;Hello, [name]! You are [age] years old.;//
+
+-- JavaScript: `${a} + ${b} = ${a + b}`
+const result be //;[a] + [b] = [a add b];//
+```
+
+```js
+const msg = `Hello, ${name}! You are ${age} years old.`;
+const result = `${a} + ${b} = ${a + b}`;
+```
+
+### Nullish coalescing (`??`)
+
+JavaScript's `??` operator becomes `coal` in Purus:
+
+```purus
+-- JavaScript: const port = config.port ?? 3000;
+const port be config.port coal 3000
+
+-- JavaScript: const name = user?.name ?? "Anonymous";
+const name be user\.name coal //;Anonymous;//
+```
+
+```js
+const port = config.port ?? 3000;
+const name = user?.name ?? "Anonymous";
+```
+
+### Ternary operator (`? :`)
+
+JavaScript's ternary `condition ? a : b` becomes `if condition then a else b`:
+
+```purus
+-- JavaScript: const label = count > 0 ? "items" : "empty";
+const label be if count gt 0 then //;items;// else //;empty;//
+```
+
+```js
+const label = count > 0 ? "items" : "empty";
+```
+
+### Optional chaining (`?.`)
+
+JavaScript's `?.` becomes `\.` in Purus:
+
+```purus
+-- JavaScript: user?.address?.city
+user\.address\.city
+
+-- JavaScript: arr?.[0]
+arr\.[\0]
+```
+
+```js
+user?.address?.city;
+arr?.[0];
+```
+
+### Strict equality (`===` / `!==`)
+
+JavaScript's `===` becomes `eq` (or `is`), and `!==` becomes `neq` (or `not eq`):
+
+```purus
+-- JavaScript: if (x === 0) {}
+if x eq 0
+  -- ...
+
+-- JavaScript: if (x !== null) {}
+if x neq null
+  -- ...
+```
+
+```js
+if (x === 0) {}
+if (x !== null) {}
+```
+
+### Arrow functions (`=>`)
+
+JavaScript's `=>` arrow functions become `fn` ... `to` (expression body) or `fn` with indented block:
+
+```purus
+-- JavaScript: const double = (x) => x * 2;
+const double be fn x to x mul 2
+
+-- JavaScript: const greet = (name) => { console.log(name); };
+const greet be fn name
+  console.log[name]
+```
+
+```js
+const double = (x) => x * 2;
+const greet = (name) => {
+  console.log(name);
+};
+```

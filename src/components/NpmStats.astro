@@ -1,0 +1,104 @@
+---
+const {
+  package: pkg = "purus",
+  versionLabel = "Latest Version",
+  downloadsLabel = "Monthly DLs",
+  updatedLabel = "Last Updated",
+} = Astro.props;
+---
+<npm-stats data-package={pkg}>
+  <div class="npm-stats-grid">
+    <div class="npm-stat">
+      <span class="npm-stat-label">{versionLabel}</span>
+      <span class="npm-stat-value" data-field="version">...</span>
+    </div>
+    <div class="npm-stat">
+      <span class="npm-stat-label">{downloadsLabel}</span>
+      <span class="npm-stat-value" data-field="downloads">...</span>
+    </div>
+    <div class="npm-stat">
+      <span class="npm-stat-label">{updatedLabel}</span>
+      <span class="npm-stat-value" data-field="updated">...</span>
+    </div>
+  </div>
+</npm-stats>
+
+<style>
+  .npm-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 30rem) {
+    .npm-stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .npm-stat {
+    display: grid;
+    place-items: center;
+    place-content: center;
+    margin-top: 0;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    background: var(--sl-color-bg-nav);
+    border: 1px solid var(--sl-color-hairline);
+    box-sizing: border-box;
+  }
+  .npm-stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+  }
+  .npm-stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--sl-color-text);
+  }
+</style>
+
+<script>
+class NpmStatsElement extends HTMLElement {
+  async connectedCallback() {
+    const pkg = this.dataset.package;
+
+    const versionEl = this.querySelector('[data-field="version"]');
+    const downloadsEl = this.querySelector('[data-field="downloads"]');
+    const updatedEl = this.querySelector('[data-field="updated"]');
+
+    // @ts-ignore
+    const safePkg = encodeURIComponent(pkg);
+
+    const [regResult, dlResult] = await Promise.allSettled([
+      fetch(`https://registry.npmjs.org/${safePkg}`).then(r => r.ok ? r.json() : null),
+      fetch(`https://api.npmjs.org/downloads/point/last-month/${safePkg}`).then(r => r.ok ? r.json() : null),
+    ]);
+
+    if (regResult.status === "fulfilled" && regResult.value) {
+      const data = regResult.value;
+      const latest = data["dist-tags"]?.latest;
+      if (versionEl) versionEl.textContent = latest || "—";
+      if (updatedEl && data.time && latest) {
+        updatedEl.textContent = (data.time[latest] || data.time.modified || "").slice(0, 10) || "—";
+      } else {
+        if (updatedEl) updatedEl.textContent = "—";
+      }
+    } else {
+      if (versionEl) versionEl.textContent = "—";
+      if (updatedEl) updatedEl.textContent = "—";
+    }
+
+    if (dlResult.status === "fulfilled" && dlResult.value) {
+      const dl = dlResult.value.downloads;
+      if (downloadsEl) downloadsEl.textContent = dl != null ? dl.toLocaleString() : "—";
+    } else {
+      if (downloadsEl) downloadsEl.textContent = "—";
+    }
+  }
+}
+customElements.define("npm-stats", NpmStatsElement);
+</script>

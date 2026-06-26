@@ -1,0 +1,69 @@
+---
+title: Welcome to Purus
+description: A language that compiles to JavaScript — no Shift key required.
+template: splash
+hero:
+  tagline: Write code without the Shift key. Beautiful, simple, and easy-to-use.
+  image:
+    html: '<img class="hero-icon" src="/favicon.svg" alt="Purus" loading="eager" decoding="async" />'
+  actions:
+    - text: Get Started
+      link: /getting-started/installation/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/puruslang/purus
+      variant: minimal
+      icon: external
+    - text: View on npm
+      link: https://www.npmjs.com/package/purus
+      variant: minimal
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import NpmStats from '../../components/NpmStats.astro';
+
+:::caution[Archive Notice]
+This is an archive of **Purus v0.x** documentation. For the latest documentation, visit [purus.work](https://purus.work).
+:::
+
+<NpmStats package="purus" />
+
+<CardGrid>
+  <Card title="No Shift Key" icon="star">
+    Purus replaces symbols like `{}()=+*` with words like `[]`, `be`, `add`, `mul`.
+  </Card>
+  <Card title="Compiles to JavaScript" icon="rocket">
+    Write Purus, get JavaScript. Use it anywhere JavaScript runs.
+  </Card>
+  <Card title="Indent-based" icon="pencil">
+    No curly braces. Blocks are defined by indentation, like CoffeeScript.
+  </Card>
+  <Card title="Full Tooling" icon="setting">
+    Linter, Prettier plugin, and VS Code extension included.
+
+    [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=otoneko1102.purus) · [Linter](https://www.npmjs.com/package/@puruslang/linter) · [Prettier Plugin](https://www.npmjs.com/package/@puruslang/prettier-plugin-purus)
+  </Card>
+</CardGrid>
+
+## Resources
+
+<CardGrid>
+  <Card title="RFC" icon="open-book">
+    Full language specification and design rationale.
+    [Read RFC →](https://github.com/puruslang/purus/blob/main/RFC.md)
+  </Card>
+  <Card title="Changelog" icon="list-format">
+    Version-by-version history of syntax and keyword changes.
+    [View Changelog →](https://github.com/puruslang/purus/blob/main/CHANGELOG.md)
+  </Card>
+</CardGrid>
+
+## Community
+
+<CardGrid>
+  <Card title="Community Projects" icon="puzzle">
+    Unofficial projects by Purus Community members.
+    [View Projects →](./community-projects/)
+  </Card>
+</CardGrid>

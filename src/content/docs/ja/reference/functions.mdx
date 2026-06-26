@@ -1,0 +1,342 @@
+---
+title: 関数
+description: Purusの関数宣言と関数式。
+sidebar:
+  order: 5
+---
+
+## 名前付き関数（ブロック本体）
+
+```purus
+fn greet name
+  console.log[name]
+```
+
+コンパイル結果:
+
+```js
+function greet(name) {
+  console.log(name);
+}
+```
+
+## 名前付き関数（式本体）
+
+`to` 形式はワンライナーの関数本体を作成します。名前付き関数には暗黙のreturnはありません — 明示的にreturnするには `to return` を使用してください。
+
+```purus
+fn greet name to console.log[name]
+```
+
+```js
+function greet(name) { console.log(name); }
+```
+
+### `to return` による明示的なreturn
+
+```purus
+fn double x to return x mul 2
+```
+
+```js
+function double(x) { return x * 2; }
+```
+
+## 引数なしの関数
+
+パラメータを省略するだけです:
+
+```purus
+fn say-hello
+  console.log[//;Hello!;//]
+```
+
+```js
+function say_hello() {
+  console.log("Hello!");
+}
+```
+
+式本体の場合:
+
+```purus
+fn say-hello to console.log[//;Hello!;//]
+```
+
+```js
+function say_hello() { console.log("Hello!"); }
+```
+
+## 複数パラメータ
+
+`;` でパラメータを区切ります:
+
+```purus
+fn add a; b
+  return a add b
+```
+
+```js
+function add(a, b) {
+  return a + b;
+}
+```
+
+## 無名関数
+
+```purus
+const double be fn x to x mul 2
+```
+
+```js
+const double = (x) => x * 2;
+```
+
+### 引数なしの無名関数
+
+```purus
+const get-time be fn to Date.now[]
+```
+
+```js
+const get_time = () => Date.now();
+```
+
+### ブロック本体の無名関数
+
+```purus
+const process be fn data
+  console.log[data]
+  return data
+```
+
+```js
+const process = (data) => {
+  console.log(data);
+  return data;
+};
+```
+
+## 非同期関数
+
+```purus
+async fn fetch-data url
+  const res be await fetch[url]
+  return res
+```
+
+```js
+async function fetch_data(url) {
+  const res = await fetch(url);
+  return res;
+}
+```
+
+### 非同期関数式
+
+非同期無名関数は通常の無名関数と同様に `async` プレフィックスを付けます:
+
+```purus
+const handler be async fn event to await process[event]
+
+const fetcher be async fn url
+  const res be await fetch[url]
+  return await res.json[]
+```
+
+```js
+const handler = async (event) => await process(event);
+
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  return await res.json();
+};
+```
+
+## インラインコールバック
+
+複数行括弧のサポートにより、無名関数をメソッドチェーンの引数として渡せます:
+
+```purus
+promise.then[fn result to console.log[result]].catch[fn err to console.error[err]]
+```
+
+複数行形式:
+
+```purus
+fetch[url].then[
+  fn response
+    return response.json[]
+].then[
+  fn data
+    console.log[data]
+].catch[
+  fn err
+    console.error[err]
+]
+```
+
+```js
+fetch(url).then((response) => {
+  return response.json();
+}).then((data) => {
+  console.log(data);
+}).catch((err) => {
+  console.error(err);
+});
+```
+
+## 関数呼び出し
+
+`()` の代わりに `[]` を使います:
+
+```purus
+greet[//;world;//]
+add[1; 2]
+console.log[//;hello;//]
+```
+
+```js
+greet("world");
+add(1, 2);
+console.log("hello");
+```
+
+### ネストされた関数呼び出し
+
+JavaScriptでの `a(b(c), d)` のようなネストされた呼び出しでは、`[]` が配列と呼び出しの両方に使われるため、`;` で引数を区切ります:
+
+```purus
+-- JS: a(b(c), d)
+a[b[c]; d]
+
+-- JS: a(b, c(d, e))
+a[b; c[d; e]]
+
+-- JS: console.log(m.max(1, 2))
+use p-math as m
+console.log[m.max[1; 2]]
+
+-- JS: fn(a(1, 2), b(3, 4), c)
+fn[a[1; 2]; b[3; 4]; c]
+
+-- JS: outer(inner1(x), inner2(y, z))
+outer[inner1[x]; inner2[y; z]]
+```
+
+```js
+a(b(c), d);
+a(b, c(d, e));
+const m = { max: Math.max };
+console.log(m.max(1, 2));
+fn(a(1, 2), b(3, 4), c);
+outer(inner1(x), inner2(y, z));
+```
+
+## 無視するパラメータ（`blank`）
+
+`blank` を使うと、そのパラメータ位置を明示的に無視できます。`Array.from` の最初の引数（要素）が不要なコールバックなどで便利です。
+
+```purus
+-- 最初の引数を無視し、インデックスのみ使用
+const indices be Array.from[[length be 5]; fn blank; i to i]
+```
+
+```js
+const indices = Array.from({ length: 5 }, (_, i) => i);
+```
+
+複数の `blank` パラメータはstrictモードエラーを避けるため、JSでは `_`・`_1`・`_2`… のように連番になります：
+
+```purus
+fn f blank; blank; x to x
+```
+
+```js
+function f(_, _1, x) { return x; }
+```
+
+`switch` のcatch-allアームとしても使用できます：
+
+```purus
+switch status
+  case //;ok;// then //;good;//
+  case blank then //;unknown;//
+```
+
+```js
+if (status === "ok") {
+  "good";
+} else {
+  "unknown";
+}
+```
+
+## 型アノテーション（消去される）
+
+```purus
+fn add a of Number; b of Number gives Number to a add b
+```
+
+`of` と `gives` による型アノテーションはJavaScript出力では消去されます。
+
+## Return
+
+```purus
+fn get-value
+  return 42
+```
+
+## ジェネレータ関数
+
+`yield` を含む関数は自動的にジェネレータ（`function*`）としてコンパイルされます。特別な構文は不要で、関数本体内で `yield` を使用するだけです:
+
+```purus
+fn count-up limit
+  let i be 0
+  while i lt limit
+    yield i
+    i be i add 1
+```
+
+```js
+function* countUp(limit) {
+  let i = 0;
+  while (i < limit) {
+    yield i;
+    i = i + 1;
+  }
+}
+```
+
+### 値なしのyield
+
+```purus
+fn signals
+  yield
+  console.log[//;resumed;//]
+  yield
+```
+
+```js
+function* signals() {
+  yield;
+  console.log("resumed");
+  yield;
+}
+```
+
+### ジェネレータの使用
+
+```purus
+const gen be count-up[5]
+for val in gen
+  console.log[val]
+```
+
+```js
+const gen = countUp(5);
+for (const val of gen) {
+  console.log(val);
+}
+```

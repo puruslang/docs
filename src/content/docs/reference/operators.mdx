@@ -1,0 +1,309 @@
+---
+title: Operators
+description: Purus operators and precedence.
+sidebar:
+  order: 3
+---
+
+## Operator Precedence (low to high)
+
+1. `pipe` — Pipeline
+2. `coal` — Nullish coalescing
+3. `or` — Logical OR
+4. `and` — Logical AND
+5. `bor` — Bitwise OR
+6. `bxor` — Bitwise XOR
+7. `band` — Bitwise AND
+8. `eq` / `neq` / `not eq` / `instanceof` — Equality / Type check
+9. `lt` / `gt` / `le` (`lt eq`) / `ge` (`gt eq`) — Comparison
+10. `shl` / `shr` / `ushr` — Bitwise shift
+11. `add` / `sub` — Addition / Subtraction
+12. `mul` / `div` / `mod` — Multiplication / Division / Modulo
+13. `pow` — Exponentiation
+14. Unary: `not` / `neg` / `bnot` / `typeof` / `void` / `await` / `delete` / `new` / `add\` (prefix `++`) / `sub\` (prefix `--`)
+15. Postfix: `.` access / `\.` optional chaining / `[args]` call / `[\expr]` computed access / `as` cast / `\add` (postfix `++`) / `\sub` (postfix `--`)
+16. Primary: literals, identifiers, brackets
+
+## Pipeline
+
+```purus
+data pipe filter
+data pipe filter pipe map
+data pipe transform[extra-arg]
+data pipe .method[arg]
+```
+
+Compiles to:
+
+```js
+filter(data)
+map(filter(data))
+transform(data, extra_arg)
+data.method(arg)
+```
+
+## Assignment
+
+```purus
+const x be 42
+let y be 10
+y be 20
+```
+
+## Compound Assignment
+
+Compound assignment operators combine an arithmetic operation with assignment:
+
+```purus
+x add be 1      -- x += 1
+x sub be 1      -- x -= 1
+x mul be 2      -- x *= 2
+x div be 2      -- x /= 2
+x mod be 3      -- x %= 3
+x pow be 2      -- x **= 2
+```
+
+Bitwise compound assignments:
+
+```purus
+x band be 255   -- x &= 255
+x bor be 1      -- x |= 1
+x bxor be mask  -- x ^= mask
+x shl be 2      -- x <<= 2
+x shr be 1      -- x >>= 1
+x ushr be 1     -- x >>>= 1
+```
+
+Logical compound assignments:
+
+```purus
+x and be true   -- x &&= true
+x or be false   -- x ||= false
+x coal be 0     -- x ??= 0
+```
+
+Works with property and computed access:
+
+```purus
+obj.count add be 1    -- obj.count += 1
+arr[\i] mul be 2      -- arr[i] *= 2
+```
+
+## Arithmetic
+
+```purus
+a add b    -- a + b
+a sub b    -- a - b
+a mul b    -- a * b
+a div b    -- a / b
+a mod b    -- a % b
+a pow b    -- a ** b
+neg x      -- -x
+```
+
+## Bitwise
+
+```purus
+a band b   -- a & b   (bitwise AND)
+a bor b    -- a | b   (bitwise OR)
+a bxor b   -- a ^ b   (bitwise XOR)
+bnot x     -- ~x      (bitwise NOT)
+a shl b    -- a << b  (left shift)
+a shr b    -- a >> b  (right shift)
+a ushr b   -- a >>> b (unsigned right shift)
+```
+
+## Comparison
+
+When the right side of `eq` is a type name (e.g., `string`, `number`, `null`, or a capitalized class name), it becomes a type check. Otherwise, it becomes a strict equality comparison (`===`).
+
+For not-equal, use `neq` or `not eq`. For less-than-or-equal, both `le` and `lt eq` work. For greater-than-or-equal, both `ge` and `gt eq` work.
+
+```purus
+a eq b      -- a === b
+a neq b     -- a !== b
+a not eq b  -- a !== b (alternative)
+a lt b      -- a < b
+a gt b      -- a > b
+a le b      -- a <= b
+a lt eq b   -- a <= b (alternative)
+a ge b      -- a >= b
+a gt eq b   -- a >= b (alternative)
+a eq string -- typeof a === "string" (type check)
+```
+
+:::tip
+`not eq` is an alias for `neq`. Both work identically:
+
+```purus
+a neq b     -- a !== b
+a not eq b  -- a !== b
+```
+
+Similarly, `lt eq` is an alias for `le`, and `gt eq` is an alias for `ge`.
+:::
+
+## Array Ranges
+
+Generate arrays from numeric ranges using `..` (inclusive) and `...` (exclusive):
+
+```purus
+const a be [0..5]     -- [0, 1, 2, 3, 4, 5]
+const b be [0...5]    -- [0, 1, 2, 3, 4]
+const c be [1..10]    -- [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const d be [1...10]   -- [1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+## Slicing
+
+Extract a portion of an array using `\` prefix with `..` (inclusive) or `...` (exclusive) inside bracket access:
+
+```purus
+const numbers be [0, 1, 2, 3, 4, 5, 6]
+const middle be numbers[\2..5]    -- [2, 3, 4, 5]
+const partial be numbers[\2...5]  -- [2, 3, 4]
+```
+
+## Splicing
+
+Replace a portion of an array by assigning to a slice:
+
+```purus
+numbers[\2..4] be [//;a;//; //;b;//; //;c;//]
+-- numbers is now [0, 1, "a", "b", "c", 5, 6]
+```
+
+## Computed Access
+
+Use `\` inside brackets to access array elements or object properties by expression:
+
+```purus
+const val be arr[\i]       -- arr[i]
+const item be obj[\key]    -- obj[key]
+arr[\0] be //;new;//        -- arr[0] = "new"
+```
+
+The `\` prefix distinguishes computed access from function calls: `f[x]` is a call, `arr[\x]` is property access.
+
+## Optional Chaining
+
+Use `\.` for optional chaining (JS `?.`):
+
+```purus
+const name be user\.name          -- user?.name
+const val be obj\.method[1; 2]    -- obj?.method(1, 2)
+const deep be a\.b\.c             -- a?.b?.c
+```
+
+Compiles to:
+
+```js
+const name = user?.name;
+const val = obj?.method(1, 2);
+const deep = a?.b?.c;
+```
+
+## Destructuring
+
+Extract values from arrays into variables:
+
+```purus
+const weather be [//;Sunny;//; //;Rainy;//]
+const [today; tomorrow] be weather
+
+-- Swap variables
+[today; tomorrow] be [tomorrow; today]
+```
+
+### Object destructuring
+
+Use `object[...]` to destructure properties from an object:
+
+```purus
+const config be [host be //;localhost;//, port be 8080]
+const object[host; port] be config
+```
+
+Compiles to:
+
+```js
+const config = { host: "localhost", port: 8080 };
+const { host, port } = config;
+```
+
+## Logical
+
+```purus
+a and b    -- a && b
+a or b     -- a || b
+not x      -- !x
+```
+
+## Nullish Coalescing
+
+The `coal` operator returns the right-hand side when the left-hand side is `null` or `undefined`:
+
+```purus
+a coal b           -- a ?? b
+a coal b coal c    -- a ?? b ?? c
+```
+
+Compiles to:
+
+```js
+a ?? b;
+a ?? b ?? c;
+```
+
+This is different from `or`: `or` treats all falsy values (`false`, `0`, `""`, `null`, `undefined`) as false, while `coal` only treats `null` and `undefined` as "empty". Use `coal` when you want to preserve values like `0`, `false`, or `""`.
+
+```purus
+const port be config.port coal 3000      -- uses 3000 only if port is null/undefined
+const name be user.name coal //;guest;//  -- uses "guest" only if name is null/undefined
+```
+
+## Type Checks
+
+`eq` performs a type check when followed by a type name.
+
+```purus
+x eq string          -- typeof x === "string"
+x eq null            -- x === null
+x eq MyClass         -- x instanceof MyClass
+x instanceof Y       -- x instanceof Y
+typeof x             -- typeof x
+void x               -- void x
+```
+
+## Increment / Decrement
+
+Purus supports postfix and prefix increment/decrement using `\` combined with `add` or `sub`:
+
+| Purus | JS | Description |
+|-------|----|-------------|
+| `x\add` | `x++` | Postfix increment |
+| `x\sub` | `x--` | Postfix decrement |
+| `add\x` | `++x` | Prefix increment |
+| `sub\x` | `--x` | Prefix decrement |
+
+```purus
+let i be 0
+i\add         -- i++  (returns 0, then i becomes 1)
+add\i         -- ++i  (i becomes 2, returns 2)
+i\sub         -- i--  (returns 2, then i becomes 1)
+sub\i         -- --i  (i becomes 0, returns 0)
+```
+
+Compiles to:
+
+```js
+let i = 0;
+i++;   // returns 0, i becomes 1
+++i;   // i becomes 2, returns 2
+i--;   // returns 2, i becomes 1
+--i;   // i becomes 0, returns 0
+```
+
+:::tip
+For simple loop counters, `i\add` (postfix) and `add\i` (prefix) are more concise alternatives to `i add be 1`. See [For (JS-style)](/reference/control-flow/#for-js-style).
+:::

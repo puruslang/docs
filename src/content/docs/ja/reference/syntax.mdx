@@ -1,0 +1,510 @@
+---
+title: 構文の概要
+description: Purusの構文の概要。
+sidebar:
+  order: 1
+---
+
+## ファイル拡張子
+
+| 拡張子 | 出力 | 説明 |
+|---|---|---|
+| `.purus` | `.js` | 標準JavaScript |
+| `.cpurus` | `.cjs` | CommonJSモジュール |
+| `.mpurus` | `.mjs` | ESモジュール |
+
+## コメント
+
+```purus
+-- これは行コメントです
+
+--- これはブロック
+コメントです ---
+```
+
+## 文字列
+
+Purusには同じJavaScriptに出力される2種類の文字列構文があります。
+
+### `//;text;//` — 推奨
+
+```purus
+const greeting be //;Hello, World;//
+const url be //;https://api.example.com/v1;//
+const tmpl be //;Hello, [name]!;//
+```
+
+`//;...;//` が**推奨**の構文です。`;` をデリミタとすることで `[expr]` 補完との概念的な重複を避け、URLなど `//` を含む内容でも視覚的な混乱が生じません。
+
+### `///text///` — 使用可能
+
+```purus
+const greeting be ///Hello, World///
+const url be ///https://api.example.com/v1///
+```
+
+`///...///` は完全にサポートされており、同一の出力を生成します。元々の構文で引き続き有効です。好みに応じて使用できます。
+
+:::note
+このドキュメントのコード例はすべて `//;...;//` を使用しています。どちらの形式も互換です。
+:::
+
+### エスケープシーケンス
+
+| エスケープ | 結果 |
+|---|---|
+| `\n` | 改行 |
+| `\t` | タブ |
+| `\\` | バックスラッシュ |
+| `\/` | `/` |
+| `\[` | `[`（リテラルブラケット、補間を防ぐ） |
+| `\]` | `]`（リテラルブラケット） |
+| `\;` | `;`（リテラルセミコロン；`//;...;//` での早期終端を防ぐ） |
+
+### 文字列補間（テンプレートリテラル）
+
+どちらの構文でも `[式]` で式を埋め込めます:
+
+```purus
+const name be //;Alice;//
+const age be 30
+const msg be //;Hello, [name]! You are [age] years old.;//
+```
+
+コンパイル結果:
+
+```js
+const name = "Alice";
+const age = 30;
+const msg = `Hello, ${name}! You are ${age} years old.`;
+```
+
+ブラケット内は任意の式を使えます:
+
+```purus
+const x be 10
+const result be //;[x] times 2 is [x mul 2];//
+```
+
+コンパイル結果:
+
+```js
+const x = 10;
+const result = `${x} times 2 is ${x * 2}`;
+```
+
+文字列内にリテラルの `[` や `]` を含めたい場合は、エスケープシーケンス `\[` と `\]` を使います。
+
+## 数値
+
+```purus
+const i be 42
+const f be 3.14
+```
+
+2進数・16進数リテラル:
+
+```purus
+const mask be 0b1010      -- 10
+const color be 0xFF00FF   -- 16711935
+```
+
+BigInt リテラル（サフィックス `n`）:
+
+```purus
+const big be 9007199254740993n
+const hex be 0xFFFFFFFFFFFFFFFFn
+const bin be 0b11111111n
+```
+
+BigInt は JavaScript の BigInt リテラルにそのままコンパイルされます。
+
+## 真偽値とnull
+
+```purus
+const a be true
+const b be false
+const c be null
+const d be nil       -- nullのエイリアス
+const e be undefined
+```
+
+## 変数
+
+変数は必ず `const`・`let`・`var` のいずれかで宣言する必要があります:
+
+```purus
+const pi be 3.14          -- 定数（再代入不可）
+let count be 0            -- 変数（再代入可）
+var legacy be //;old;//   -- varスコープ（非推奨）
+```
+
+プロパティやインデックスへの代入は宣言キーワード不要です:
+
+```purus
+const obj.x be 10   -- obj が宣言済みでなければ obj = {} を自動初期化
+obj.x be 20         -- プロパティを再代入
+arr[\0] be 99       -- インデックス代入
+```
+
+:::caution[裸の変数代入はサポートされていません（v0.10.x以降）]
+宣言キーワードなしの識別子への代入は**コンパイルエラー**になります:
+
+```purus
+-- エラー: 裸の識別子代入はサポートされていません
+x be 42
+
+-- OK: const または let を使用
+const x be 42
+let x be 42
+```
+
+この制限により、暗默的なグローバル変数の生成を防いでいます。
+:::
+
+## 区切り文字: `;` と `,`
+
+Purusには異なる役割を持つ2つの区切り文字があります:
+
+| 区切り文字 | 用途 | JS出力 |
+|---|---|---|
+| `;` | 関数の引数、パラメータ、分割代入 | `,` |
+| `,` | 配列の要素、オブジェクトのプロパティ | `,` |
+
+どちらもJavaScriptでは `,` にコンパイルされますが、Purusでは異なる目的で使い分けます:
+
+### `;` — 引数とパラメータ
+
+`;` は**関数の引数**（呼び出し時）と**パラメータ**（宣言時）の区切りに使用します:
+
+```purus
+-- 関数パラメータ
+fn add a; b
+  return a add b
+
+-- 関数の引数
+add[1; 2]
+console.log[//;hello;//; //;world;//]
+use p-math as m
+m.max[1; 2; 3]
+
+-- 分割代入
+const [a; b; c] be arr
+const object[name; age] be person
+```
+
+### `,` — データの区切り
+
+`,` は**配列の要素**と**オブジェクトのプロパティ**の区切りに使用します:
+
+```purus
+-- 配列
+const arr be [1, 2, 3]
+
+-- オブジェクト
+const obj be [name be //;Alice;//, age be 30]
+```
+
+### なぜ2つの区切り文字があるのか？
+
+Purusでは `[]` を関数呼び出しと配列の両方に使うため、2つの区切り文字で区別します:
+
+```purus
+-- `;` は3つの引数を持つ関数呼び出し
+fn[a; b; c]        -- fn(a, b, c)
+
+-- `,` は3つの要素を持つ配列
+[a, b, c]          -- [a, b, c]
+
+-- ネストされた呼び出しでは `;` で引数を区切る
+outer[inner[x]; y]  -- outer(inner(x), y)
+```
+
+:::tip
+配列リテラルでは `;` も区切り文字として使え、`,` と同じにコンパイルされます。ただし、データには `,`、引数には `;` を使うのが可読性のための推奨規則です。
+
+```purus
+const arr be [1; 2; 3]   -- 動作する、[1, 2, 3]と同じ
+```
+:::
+
+## 配列
+
+```purus
+const arr be [1, 2, 3]
+const arr2 be [1; 2; 3]   -- セミコロンも使用可能
+const empty be []
+```
+
+### 配列の範囲
+
+```purus
+const inclusive be [0..5]   -- [0, 1, 2, 3, 4, 5]
+const exclusive be [0...5]  -- [0, 1, 2, 3, 4]
+```
+
+### スライス（切り出し）
+
+`\` プレフィックスと `..`（包含）または `...`（排他）を使って配列の一部を切り出します:
+
+```purus
+const numbers be [0, 1, 2, 3, 4, 5, 6]
+const middle be numbers[\2..5]    -- [2, 3, 4, 5]
+const partial be numbers[\2...5]  -- [2, 3, 4]
+```
+
+コンパイル結果:
+
+```js
+const middle = numbers.slice(2, 5 + 1);
+const partial = numbers.slice(2, 5);
+```
+
+### スプライス（部分置換）
+
+スライスに代入することで配列の一部を置換できます:
+
+```purus
+numbers[\2..4] be [//;a;//; //;b;//; //;c;//]
+-- numbers は [0, 1, "a", "b", "c", 5, 6] になります
+```
+
+コンパイル結果:
+
+```js
+numbers.splice(2, 4 - 2 + 1, "a", "b", "c");
+```
+
+### 分割代入
+
+配列から変数に値を取り出します:
+
+```purus
+const weather be [//;Sunny;//; //;Rainy;//]
+const [today; tomorrow] be weather
+
+-- 変数の値を入れ替える
+[today; tomorrow] be [tomorrow; today]
+```
+
+コンパイル結果:
+
+```js
+const [today, tomorrow] = weather;
+[today, tomorrow] = [tomorrow, today];
+```
+
+## オブジェクト
+
+```purus
+const obj be [name be //;Alice;//, age be 30]
+const empty-obj be [be]    -- 空のオブジェクト
+```
+
+### オブジェクト分割代入
+
+`object[...]` を使ってオブジェクトからプロパティを取り出します:
+
+```purus
+const person be [name be //;Alice;//, age be 30]
+const object[name; age] be person
+```
+
+コンパイル結果:
+
+```js
+const person = { name: "Alice", age: 30 };
+const { name, age } = person;
+```
+
+## 括弧は`[]`のみ
+
+Purusでは関数呼び出し、配列、オブジェクト、グループ化のすべてに `[]` を使用します。`()` や `{}` は使いません。
+
+### 計算プロパティアクセス
+
+`\` を括弧内で使うことで、式による配列オブジェクトアクセスを行います:
+
+```purus
+const val be arr[\0]        -- arr[0]
+const item be obj[\key]     -- obj[key]
+const x be matrix[\i][\j]  -- matrix[i][j]
+```
+
+`\` プレフィックスにより、関数呼び出しとプロパティアクセスを区別します:
+
+| 構文 | 意味 | JS出力 |
+|---|---|---|
+| `f[x]` | 関数呼び出し | `f(x)` |
+| `arr[\x]` | 計算プロパティアクセス | `arr[x]` |
+| `arr[\2..4]` | スライス | `arr.slice(2,5)` |
+
+### オプショナルチェイニング
+
+`\.` でオプショナルチェイニング（JSの `?.`）を表現します:
+
+```purus
+const name be user\.name          -- user?.name
+const val be obj\.method[1; 2]    -- obj?.method(1, 2)
+```
+
+### 複数行括弧
+
+括弧 `[...]` は複数行にまたがることができます。項目間の改行やインデントは無視されます:
+
+```purus
+const items be [
+  1;
+  2;
+  3
+]
+
+const config be [
+  host be //;localhost;//,
+  port be 8080
+]
+
+fetch[url].then[
+  fn response
+    return response.json[]
+].catch[
+  fn err
+    console.error[err]
+]
+```
+
+## インデント
+
+ブロックはインデントで定義されます（2スペース推奨）:
+
+```purus
+if x gt 0
+  console.log[//;positive;//]
+else
+  console.log[//;non-positive;//]
+```
+
+## 識別子
+
+識別子にはハイフン（`-`）とアンダースコア（`_`）を含めることができ、JavaScript出力ではどちらもアンダースコアに変換されます:
+
+```purus
+const my-variable be 42
+-- コンパイル結果: const my_variable = 42;
+
+const my_variable2 be 43
+-- コンパイル結果: const my_variable2 = 43;
+```
+
+ハイフンとアンダースコアは互換性があります。`my-var` と `my_var` は同じJavaScript変数（`my_var`）を参照します。JSライブラリとの互換性のため、どちらの形式でも使用できます。
+
+:::caution
+`a-b` と `a_b` はどちらも `a_b` にコンパイルされるため、同じスコープで両方を定義しないでください。同じ変数を参照します。
+:::
+
+## JavaScript との比較
+
+Purusは多くのJavaScript記号を単語に置き換えます。よく使うJavaScriptパターンとPurusの対応表です:
+
+### テンプレートリテラル (`${}`)
+
+JavaScriptではバッククォートと `${}` を使いますが、Purusでは `///` 文字列と `[]` を使います:
+
+```purus
+-- JavaScript: `Hello, ${name}! You are ${age} years old.`
+const msg be //;Hello, [name]! You are [age] years old.;//
+
+-- JavaScript: `${a} + ${b} = ${a + b}`
+const result be //;[a] + [b] = [a add b];//
+```
+
+```js
+const msg = `Hello, ${name}! You are ${age} years old.`;
+const result = `${a} + ${b} = ${a + b}`;
+```
+
+### Null合体 (`??`)
+
+JavaScriptの `??` 演算子はPurusでは `coal` になります:
+
+```purus
+-- JavaScript: const port = config.port ?? 3000;
+const port be config.port coal 3000
+
+-- JavaScript: const name = user?.name ?? "Anonymous";
+const name be user\.name coal //;Anonymous;//
+```
+
+```js
+const port = config.port ?? 3000;
+const name = user?.name ?? "Anonymous";
+```
+
+### 三項演算子 (`? :`)
+
+JavaScriptの三項演算子 `condition ? a : b` は `if condition then a else b` になります:
+
+```purus
+-- JavaScript: const label = count > 0 ? "items" : "empty";
+const label be if count gt 0 then //;items;// else //;empty;//
+```
+
+```js
+const label = count > 0 ? "items" : "empty";
+```
+
+### オプショナルチェイニング (`?.`)
+
+JavaScriptの `?.` はPurusでは `\.` になります:
+
+```purus
+-- JavaScript: user?.address?.city
+user\.address\.city
+
+-- JavaScript: arr?.[0]
+arr\.[\0]
+```
+
+```js
+user?.address?.city;
+arr?.[0];
+```
+
+### 厳密等価 (`===` / `!==`)
+
+JavaScriptの `===` は `eq`（または `is`）、`!==` は `neq`（または `not eq`）になります:
+
+```purus
+-- JavaScript: if (x === 0) {}
+if x eq 0
+  -- ...
+
+-- JavaScript: if (x !== null) {}
+if x neq null
+  -- ...
+```
+
+```js
+if (x === 0) {}
+if (x !== null) {}
+```
+
+### アロー関数 (`=>`)
+
+JavaScriptの `=>` アロー関数は `fn` ... `to`（式本体）または `fn` とインデントブロックになります:
+
+```purus
+-- JavaScript: const double = (x) => x * 2;
+const double be fn x to x mul 2
+
+-- JavaScript: const greet = (name) => { console.log(name); };
+const greet be fn name
+  console.log[name]
+```
+
+```js
+const double = (x) => x * 2;
+const greet = (name) => {
+  console.log(name);
+};
+```

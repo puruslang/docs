@@ -1,0 +1,309 @@
+---
+title: 演算子
+description: Purusの演算子と優先順位。
+sidebar:
+  order: 3
+---
+
+## 演算子の優先順位（低い順位から）
+
+1. `pipe`  パイプライン
+2. `coal`  Null合体
+3. `or`  論理OR
+4. `and`  論理AND
+5. `bor`  ビットOR
+6. `bxor`  ビットXOR
+7. `band`  ビットAND
+8. `eq` / `neq` / `not eq` / `instanceof`  等価 / 型チェック
+9. `lt` / `gt` / `le`（`lt eq`）/ `ge`（`gt eq`）  比較
+10. `shl` / `shr` / `ushr`  ビットシフト
+11. `add` / `sub`  加算 / 減算
+12. `mul` / `div` / `mod`  乗算 / 除算 / 剰余
+13. `pow`  べき乗
+14. 単項: `not` / `neg` / `bnot` / `typeof` / `void` / `await` / `delete` / `new` / `add\` (前置 `++`) / `sub\` (前置 `--`)
+15. 後置: `.` アクセス / `\.` オプショナルチェイニング / `[args]` 呼び出し / `[\expr]` 計算アクセス / `as` キャスト / `\add` (後置 `++`) / `\sub` (後置 `--`)
+16. 基本: リテラル、識別子、括弧
+
+## パイプライン
+
+```purus
+data pipe filter
+data pipe filter pipe map
+data pipe transform[extra-arg]
+data pipe .method[arg]
+```
+
+コンパイル結果:
+
+```js
+filter(data)
+map(filter(data))
+transform(data, extra_arg)
+data.method(arg)
+```
+
+## 代入
+
+```purus
+const x be 42
+let y be 10
+y be 20
+```
+
+## 複合代入
+
+算術演算と代入を組み合わせた複合代入演算子:
+
+```purus
+x add be 1      -- x += 1
+x sub be 1      -- x -= 1
+x mul be 2      -- x *= 2
+x div be 2      -- x /= 2
+x mod be 3      -- x %= 3
+x pow be 2      -- x **= 2
+```
+
+ビット演算の複合代入:
+
+```purus
+x band be 255   -- x &= 255
+x bor be 1      -- x |= 1
+x bxor be mask  -- x ^= mask
+x shl be 2      -- x <<= 2
+x shr be 1      -- x >>= 1
+x ushr be 1     -- x >>>= 1
+```
+
+論理演算の複合代入:
+
+```purus
+x and be true   -- x &&= true
+x or be false   -- x ||= false
+x coal be 0     -- x ??= 0
+```
+
+プロパティアクセスやインデックスアクセスにも使用可能:
+
+```purus
+obj.count add be 1    -- obj.count += 1
+arr[\i] mul be 2      -- arr[i] *= 2
+```
+
+## 算術
+
+```purus
+a add b    -- a + b
+a sub b    -- a - b
+a mul b    -- a * b
+a div b    -- a / b
+a mod b    -- a % b
+a pow b    -- a ** b
+neg x      -- -x
+```
+
+## ビット演算
+
+```purus
+a band b   -- a & b   (ビットAND)
+a bor b    -- a | b   (ビットOR)
+a bxor b   -- a ^ b   (ビットXOR)
+bnot x     -- ~x      (ビットNOT)
+a shl b    -- a << b  (左シフト)
+a shr b    -- a >> b  (右シフト)
+a ushr b   -- a >>> b (符号なし右シフト)
+```
+
+## 比較
+
+`eq` の右辺が型名（`string`, `number`, `null`, 大文字始まりのクラス名など）の場合は型チェックになり、それ以外は厳密等価比較（`===`）になります。
+
+不等価には `neq` または `not eq` を使います。以下はどちらも `le` と同じ意味です: `lt eq`。以下はどちらも `ge` と同じ意味です: `gt eq`。
+
+```purus
+a eq b      -- a === b
+a neq b     -- a !== b
+a not eq b  -- a !== b（別の書き方）
+a lt b      -- a < b
+a gt b      -- a > b
+a le b      -- a <= b
+a lt eq b   -- a <= b（別の書き方）
+a ge b      -- a >= b
+a gt eq b   -- a >= b（別の書き方）
+a eq string -- typeof a === "string"（型チェック）
+```
+
+:::tip
+`not eq` は `neq` のエイリアスです。どちらも同じ動作をします:
+
+```purus
+a neq b     -- a !== b
+a not eq b  -- a !== b
+```
+
+同様に、`lt eq` は `le` のエイリアス、`gt eq` は `ge` のエイリアスです。
+:::
+
+## 配列の範囲
+
+`..`（包含）と `...`（排他）を使って数値範囲から配列を生成します:
+
+```purus
+const a be [0..5]     -- [0, 1, 2, 3, 4, 5]
+const b be [0...5]    -- [0, 1, 2, 3, 4]
+const c be [1..10]    -- [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const d be [1...10]   -- [1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+## スライス（切り出し）
+
+`\` プレフィックスと `..`（包含）または `...`（排他）をブラケットアクセス内で使い、配列の一部を切り出します:
+
+```purus
+const numbers be [0, 1, 2, 3, 4, 5, 6]
+const middle be numbers[\2..5]    -- [2, 3, 4, 5]
+const partial be numbers[\2...5]  -- [2, 3, 4]
+```
+
+## スプライス（部分置換）
+
+スライスに代入することで配列の一部を置換できます:
+
+```purus
+numbers[\2..4] be [//;a;//; //;b;//; //;c;//]
+-- numbers は [0, 1, "a", "b", "c", 5, 6] になります
+```
+
+## 計算プロパティアクセス
+
+`\` を括弧内で使うことで、式による配列オブジェクトアクセスを行います:
+
+```purus
+const val be arr[\i]       -- arr[i]
+const item be obj[\key]    -- obj[key]
+arr[\0] be //;new;//        -- arr[0] = "new"
+```
+
+`\` プレフィックスにより、関数呼び出し（`f[x]`）とプロパティアクセス（`arr[\x]`）を区別します。
+
+## オプショナルチェイニング
+
+`\.` でオプショナルチェイニング（JSの `?.`）を表現します:
+
+```purus
+const name be user\.name          -- user?.name
+const val be obj\.method[1; 2]    -- obj?.method(1, 2)
+const deep be a\.b\.c             -- a?.b?.c
+```
+
+コンパイル結果:
+
+```js
+const name = user?.name;
+const val = obj?.method(1, 2);
+const deep = a?.b?.c;
+```
+
+## 分割代入
+
+配列から変数に値を取り出します:
+
+```purus
+const weather be [//;Sunny;//; //;Rainy;//]
+const [today; tomorrow] be weather
+
+-- 変数の値を入れ替える
+[today; tomorrow] be [tomorrow; today]
+```
+
+### オブジェクト分割代入
+
+`object[...]` を使ってオブジェクトからプロパティを取り出します:
+
+```purus
+const config be [host be //;localhost;//, port be 8080]
+const object[host; port] be config
+```
+
+コンパイル結果:
+
+```js
+const config = { host: "localhost", port: 8080 };
+const { host, port } = config;
+```
+
+## 論理
+
+```purus
+a and b    -- a && b
+a or b     -- a || b
+not x      -- !x
+```
+
+## Null合体（Nullish Coalescing）
+
+`coal` 演算子は、左辺が `null` または `undefined` の場合に右辺の値を返します:
+
+```purus
+a coal b           -- a ?? b
+a coal b coal c    -- a ?? b ?? c
+```
+
+コンパイル結果:
+
+```js
+a ?? b;
+a ?? b ?? c;
+```
+
+`or` との違い: `or` はすべてのfalsy値（`false`, `0`, `""`, `null`, `undefined`）をfalseとして扱いますが、`coal` は `null` と `undefined` のみを「空」として扱います。`0` や `false` や `""` を保持したい場合は `coal` を使ってください。
+
+```purus
+const port be config.port coal 3000      -- portがnull/undefinedの場合のみ3000を使用
+const name be user.name coal //;guest;//  -- nameがnull/undefinedの場合のみ"guest"を使用
+```
+
+## 型チェック
+
+`eq` は型名の前に置くと型チェックとして機能します。
+
+```purus
+x eq string          -- typeof x === "string"
+x eq null            -- x === null
+x eq MyClass         -- x instanceof MyClass
+x instanceof Y       -- x instanceof Y
+typeof x             -- typeof x
+void x               -- void x
+```
+
+## インクリメント / デクリメント
+
+`\` と `add` / `sub` を組み合わせて、後置・前置のインクリメント／デクリメントを表現できます：
+
+| Purus | JS | 説明 |
+|-------|----|------|
+| `x\add` | `x++` | 後置インクリメント |
+| `x\sub` | `x--` | 後置デクリメント |
+| `add\x` | `++x` | 前置インクリメント |
+| `sub\x` | `--x` | 前置デクリメント |
+
+```purus
+let i be 0
+i\add         -- i++  (0を返し、iは1になる)
+add\i         -- ++i  (iは2になり、2を返す)
+i\sub         -- i--  (2を返し、iは1になる)
+sub\i         -- --i  (iは0になり、0を返す)
+```
+
+コンパイル結果:
+
+```js
+let i = 0;
+i++;   // 0を返し、iは1になる
+++i;   // iは2になり、2を返す
+i--;   // 2を返し、iは1になる
+--i;   // iは0になり、0を返す
+```
+
+:::tip
+ループカウンタには `i\add`（後置）や `add\i`（前置）が `i add be 1` より簡潔に書けます。[For（JS スタイル）](/ja/reference/control-flow/#for-js-スタイル)も参照してください。
+:::

@@ -1,0 +1,89 @@
+---
+title: Installation
+description: How to install the Purus compiler.
+sidebar:
+  order: 1
+---
+
+import NpmVersion from '../../../components/NpmVersion.astro';
+
+## Prerequisites
+
+:::caution[Node.js v20 or later required]
+Purus **v0.10.x and later** requires **Node.js v20 or later**. Older versions are not supported.
+
+If you are using Purus **v0.9.x or earlier**, Node.js v18 or later is required.
+:::
+
+Install Node.js from one of the following:
+
+- [Node.js v20](https://nodejs.org/en/download/archive/v20) — specific v20 release
+- [Node.js LTS](https://nodejs.org/en/download) — latest LTS release
+- [nvm](https://github.com/nvm-sh/nvm) *(recommended)* — Node Version Manager (macOS / Linux)
+- [nvm-windows](https://github.com/coreybutler/nvm-windows) *(recommended)* — Node Version Manager (Windows)
+
+:::tip[Using nvm]
+```sh
+# Install and use Node.js v20
+nvm install 20
+nvm use 20
+
+# Or install and use the latest LTS
+nvm install --lts
+nvm use --lts
+```
+:::
+
+## Install via npm
+
+Latest version: <NpmVersion package="purus" /> — [View on npm](https://www.npmjs.com/package/purus)
+
+```sh
+npm install -g purus
+```
+
+## Verify
+
+```sh
+purus version
+```
+
+## Your first program
+
+Create a file `main.purus`:
+
+```purus
+const message be //;Hello, World;//
+console.log[message]
+```
+
+Compile and run:
+
+```sh
+purus build main.purus
+node main.js
+```
+
+Or run directly without generating files:
+
+```sh
+purus run main.purus
+```
+
+## Create a project
+
+Use `purus new` to set up a project with configuration, scripts, and dependencies:
+
+```sh
+purus new my-project
+cd my-project
+npm run build
+```
+
+## File extensions
+
+| Extension | Output | Use case |
+|---|---|---|
+| `.purus` | `.js` | Standard JavaScript |
+| `.cpurus` | `.cjs` | CommonJS module |
+| `.mpurus` | `.mjs` | ES Module |

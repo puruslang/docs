@@ -1,0 +1,101 @@
+---
+title: Linter
+description: "@puruslang/linter — static analysis for Purus."
+sidebar:
+  order: 2
+---
+
+[View on npm](https://www.npmjs.com/package/@puruslang/linter)
+
+## Installation
+
+```sh
+npm install -D @puruslang/linter
+```
+
+Or globally:
+
+```sh
+npm install -g @puruslang/linter
+```
+
+## Usage
+
+```sh
+# Lint specific files
+purus-lint src/main.purus
+
+# Lint all files in a directory
+purus-lint src
+
+# Lint using config.purus settings
+purus-lint
+```
+
+When no files are specified, `purus-lint` reads `config.purus` and lints all files in the `entry` directory.
+
+You can pass files and directories as positional arguments.
+
+### Options
+
+| Option | Alias | Description |
+|---|---|---|
+| `--config <file>` | | Path to config file |
+| `--help` | `-h` | Show help |
+
+## Rules
+
+| Rule | Default | Description |
+|---|---|---|
+| `no-var` | `warn` | Avoid `var`; use `const` or `let` |
+| `bare-assignment` | `warn` | Avoid bare assignment without `const`/`let`/`var` |
+| `no-nil` | `warn` | Use `null` instead of `nil` |
+| `no-function` | `warn` | `function` is deprecated; use `fn` |
+| `no-protected` | `warn` | `protected` is deprecated; use `private` |
+| `no-else-if` | `warn` | Use `elif` instead of `else if` |
+| `no-js-chars` | `error` | JavaScript characters (`(){}""''$#@`\``) are not allowed |
+| `no-js-operators` | `error` | JavaScript operators (`===`, `!==`, `&&`, `\|\|`, `+=`, `-=`, etc.) are not allowed. Note: `//;...;//` strings are recognized as valid and their contents are not flagged. |
+| `no-for-range` | `warn` | `for ... in range` is deprecated; use JS-style `for` loop |
+| `bracket-match` | `error` | Unmatched `[` or `]` brackets |
+| `const-reassign` | `error` | Cannot reassign a `const` variable |
+| `duplicate-use` | `warn` | Duplicate `use` import |
+| `indent-size` | `warn` (2) | Indentation must be a multiple of N spaces |
+| `no-trailing-whitespace` | `warn` | No trailing whitespace |
+| `max-line-length` | `off` (100) | Maximum line length |
+| `no-unused-import` | `warn` | Warn on unused imports |
+| `consistent-naming` | `warn` (kebab-case) | Naming convention |
+
+## Configuration
+
+### config.purus
+
+Linter settings can be configured in `config.purus` alongside build settings:
+
+```purus
+-- Linter settings
+const lint.no-var be //;warn;//
+const lint.bare-assignment be //;warn;//
+const lint.no-nil be //;warn;//
+const lint.no-function be //;warn;//
+const lint.no-protected be //;warn;//
+const lint.no-else-if be //;warn;//
+const lint.no-js-chars be //;error;//
+const lint.no-js-operators be //;error;//
+const lint.bracket-match be //;error;//
+const lint.const-reassign be //;error;//
+const lint.duplicate-use be //;warn;//
+const lint.indent-size be 2
+const lint.max-line-length be //;off;//
+const lint.no-trailing-whitespace be //;warn;//
+const lint.no-unused-import be //;warn;//
+const lint.consistent-naming be //;warn;//
+```
+
+## Programmatic API
+
+```js
+const { lint } = require("@puruslang/linter");
+
+const diagnostics = lint("var x be 42");
+// [{ rule: "no-var", severity: "warn", line: 1, col: 1, message: "..." }]
+```

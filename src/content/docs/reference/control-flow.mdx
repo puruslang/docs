@@ -1,0 +1,424 @@
+---
+title: Control Flow
+description: Conditionals, loops, and pattern matching in Purus.
+sidebar:
+  order: 4
+---
+
+## If / Elif / Else
+
+Purus uses indentation to define blocks — no curly braces `{}` needed.
+
+```purus
+if x lt 0
+  console.log[//;negative;//]
+elif x eq 0
+  console.log[//;zero;//]
+else
+  console.log[//;positive;//]
+```
+
+```js
+if (x < 0) {
+  console.log("negative");
+} else if (x === 0) {
+  console.log("zero");
+} else {
+  console.log("positive");
+}
+```
+
+:::tip
+`elif` is an alias for `else if`. Both work identically:
+
+```purus
+if x lt 0
+  console.log[//;negative;//]
+else if x eq 0
+  console.log[//;zero;//]
+else
+  console.log[//;positive;//]
+```
+
+This compiles to the same JavaScript as `elif`.
+:::
+
+### Multi-line blocks
+
+Any statements indented under `if`, `elif`, or `else` belong to that block:
+
+```purus
+if logged-in
+  const user be get-user[]
+  console.log[//;Welcome, [user.name];//]
+  show-dashboard[]
+else
+  console.log[//;Please log in;//]
+  redirect[//;login;//]
+```
+
+```js
+if (logged_in) {
+  const user = get_user();
+  console.log(`Welcome, ${user.name}`);
+  show_dashboard();
+} else {
+  console.log("Please log in");
+  redirect("login");
+}
+```
+
+## Unless
+
+Negated `if`:
+
+```purus
+unless done
+  keep-going[]
+```
+
+```js
+if (!(done)) {
+  keep_going();
+}
+```
+
+## Inline if (ternary)
+
+```purus
+const result be if condition then 1 else 2
+```
+
+```js
+const result = condition ? 1 : 2;
+```
+
+## Postfix modifiers
+
+Write short conditionals and loops on a single line:
+
+```purus
+console.log[//;debug;//] if verbose
+console.log[//;skip;//] unless done
+console.log[item] for item in list
+```
+
+```js
+if (verbose) {
+  console.log("debug");
+}
+if (!(done)) {
+  console.log("skip");
+}
+for (const item of list) {
+  console.log(item);
+}
+```
+
+## While / Until
+
+```purus
+while i lt 10
+  i be i add 1
+
+until finished
+  do-work[]
+```
+
+```js
+while (i < 10) {
+  i = i + 1;
+}
+while (!(finished)) {
+  do_work();
+}
+```
+
+## Do-While
+
+:::caution[Deprecated]
+`do...while` is deprecated. Prefer `while` or `until` with explicit initialization.
+:::
+
+Execute a block at least once, then repeat while the condition is true:
+
+```purus
+do
+  process-item[]
+while has-more[]
+```
+
+```js
+do {
+  processItem();
+} while (hasMore());
+```
+
+## For-in
+
+```purus
+for item in items
+  console.log[item]
+```
+
+```js
+for (const item of items) {
+  console.log(item);
+}
+```
+
+With index:
+
+```purus
+for i; item in items
+  console.log[i; item]
+```
+
+```js
+for (let [i, item] of items.entries()) {
+  console.log(i, item);
+}
+```
+
+## For-range
+
+:::caution[Deprecated]
+`for ... in range` is deprecated. Use the JS-style `for` loop instead.
+:::
+
+```purus
+for i in range 0; 10
+  console.log[i]
+```
+
+```js
+for (let i = 0; i < 10; i++) {
+  console.log(i);
+}
+```
+
+## For (JS-style)
+
+A C-style for loop with init, condition, and update clauses:
+
+```purus
+for let i be 0; i lt 10; i add be 1
+  console.log[i]
+```
+
+```js
+for (let i = 0; i < 10; i += 1) {
+  console.log(i);
+}
+```
+
+Works with any compound assignment operator:
+
+```purus
+for let x be 1; x lt 100; x mul be 2
+  console.log[x]
+```
+
+```js
+for (let x = 1; x < 100; x *= 2) {
+  console.log(x);
+}
+```
+
+Plain assignment in the update clause:
+
+```purus
+for let i be 0; i lt 5; i be i add 1
+  console.log[i]
+```
+
+```js
+for (let i = 0; i < 5; i = i + 1) {
+  console.log(i);
+}
+```
+
+Using postfix/prefix increment with `\add` and `add\` (no spaces needed):
+
+```purus
+for let i be 0; i lt 10; i\add
+  console.log[i]
+```
+
+```js
+for (let i = 0; i < 10; i++) {
+  console.log(i);
+}
+```
+
+Counting down with `\sub`:
+
+```purus
+for let i be 9; i ge 0; i\sub
+  console.log[i]
+```
+
+```js
+for (let i = 9; i >= 0; i--) {
+  console.log(i);
+}
+```
+
+## Switch / Case / Default
+
+```purus
+switch x
+  case 1 then //;one;//
+  case 2 then //;two;//
+  default //;other;//
+```
+
+```js
+if (x === 1) {
+  "one";
+} else if (x === 2) {
+  "two";
+} else {
+  "other";
+}
+```
+
+With guards:
+
+In `case n if ...`, the variable `n` is bound to the switch subject (`value`), allowing the guard condition to reference it.
+
+```purus
+switch value
+  case n if n gt 0
+    console.log[//;positive;//]
+  default
+    console.log[//;non-positive;//]
+```
+
+```js
+{
+  const n = value;
+  if (n > 0) {
+    console.log("positive");
+  } else {
+    console.log("non-positive");
+  }
+}
+```
+
+### Wildcard with `blank`
+
+Use `case blank` to match any value without creating a binding. This is the Purus equivalent of the `_` wildcard convention in JavaScript:
+
+```purus
+switch status
+  case //;ok;// then //;good;//
+  case blank then //;unknown;//
+```
+
+```js
+if (status === "ok") {
+  "good";
+} else {
+  "unknown";
+}
+```
+
+## Match / When
+
+:::caution[Deprecated]
+`match` / `when` is deprecated. Use `switch` / `case` / `default` instead.
+:::
+
+```purus
+match x
+  when 1 then //;one;//
+  when 2 then //;two;//
+  else //;other;//
+```
+
+```js
+if (x === 1) {
+  "one";
+} else if (x === 2) {
+  "two";
+} else {
+  "other";
+}
+```
+
+With guards:
+
+In `when n if ...`, the variable `n` is bound to the match subject (`value`), allowing the guard condition to reference it.
+
+```purus
+match value
+  when n if n gt 0
+    console.log[//;positive;//]
+  else
+    console.log[//;non-positive;//]
+```
+
+```js
+{
+  const n = value;
+  if (n > 0) {
+    console.log("positive");
+  } else {
+    console.log("non-positive");
+  }
+}
+```
+
+## try / catch / finally
+
+```purus
+try
+  risky[]
+catch e
+  console.log[e]
+finally
+  cleanup[]
+```
+
+```js
+try {
+  risky();
+} catch (e) {
+  console.log(e);
+} finally {
+  cleanup();
+}
+```
+
+### Try as expression
+
+```purus
+const result be try
+  risky[]
+catch e
+  default-value
+```
+
+```js
+let result;
+try {
+  result = risky();
+} catch (e) {
+  result = defaultValue;
+}
+```
+
+## Throw
+
+```purus
+throw new Error[//;something went wrong;//]
+throw err if condition
+```
+
+```js
+throw new Error("something went wrong");
+if (condition) {
+  throw err;
+}
+```

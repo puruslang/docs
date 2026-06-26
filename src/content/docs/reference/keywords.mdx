@@ -1,0 +1,216 @@
+---
+title: Keywords
+description: Complete list of Purus keywords.
+sidebar:
+  order: 2
+---
+
+## Declaration
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `const` | `const` | Constant declaration |
+| `let` | `let` | Variable declaration |
+| `var` | `var` | Var declaration (discouraged) |
+| `be` | `=` | Assignment / reassignment (must be preceded by `const`, `let`, `var`, or a property/index target) |
+
+:::caution[Bare variable assignment is not supported (since v0.10.x)]
+Using `be` on a bare identifier without a declaration keyword is a compile error. Always declare variables with `const`, `let`, or `var`:
+
+```purus
+-- ERROR
+x be 42
+
+-- OK
+const x be 42
+let x be 42
+
+-- OK (property / index targets do not need a declaration keyword)
+obj.prop be value
+arr[\0] be value
+```
+:::
+
+## Functions
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `fn` | `function` | Function declaration/expression |
+| `return` | `return` | Return value |
+| `to` | `=> expr` | Expression body |
+| `to return` | `{ return expr; }` | Explicit return expression body |
+| `gives` | _(erased)_ | Return type annotation |
+| `async` | `async` | Async function |
+| `await` | `await` | Await expression |
+| `yield` | `yield` | Yield expression (generator) |
+| `function` | _(deprecated)_ | Deprecated alias for `fn` |
+
+## Conditional
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `if` | `if` | Conditional |
+| `elif` | `else if` | Else-if branch |
+| `else` | `else` | Else branch |
+| `unless` | `if (!(...))` | Negated conditional |
+| `then` | _(ternary/inline)_ | Inline conditional |
+
+## Loops
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `while` | `while` | While loop |
+| `until` | `while (!(...))` | Negated while loop |
+| `for` | `for` | For loop |
+| `in` | `of` / `in` | Iterator |
+| `range` | _(numeric range)_ | Range-based loop |
+| `break` | `break` | Break |
+| `continue` | `continue` | Continue |
+| `do` | `do` | Do-while loop (deprecated) |
+
+## Pattern Matching
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `switch` | if-else chain | Switch expression |
+| `case` | _(switch arm)_ | Switch case |
+| `default` | _(switch default)_ | Default arm |
+| `match` | if-else chain | Match expression (deprecated) |
+| `when` | _(match arm)_ | Match case (deprecated) |
+| `blank` | `_` | Wildcard — ignored parameter or catch-all match arm |
+
+## Modules
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `import` | `import` | ESM import |
+| `from` | `from` | Import source |
+| `export` | `export` | ESM export |
+| `default` | `default` | Default export |
+| `require` | `require()` | CJS require |
+| `use` | _(inline JS)_ | Standard library import (`p-` prefix, `as` optional) |
+| `namespace` | IIFE | Module namespace |
+| `public` | `export` | Public export |
+| `all` | `* as` | Namespace import |
+| `with` | `with` | Import attributes |
+
+## Operators
+
+### Arithmetic
+
+| Keyword | JS Output |
+|---|---|
+| `add` | `+` |
+| `sub` | `-` |
+| `mul` | `*` |
+| `div` | `/` |
+| `mod` | `%` |
+| `pow` | `**` |
+| `neg` | `-` (unary) |
+
+### Compound Assignment
+
+| Keyword | JS Output |
+|---|---|
+| `add be` | `+=` |
+| `sub be` | `-=` |
+| `mul be` | `*=` |
+| `div be` | `/=` |
+| `mod be` | `%=` |
+| `pow be` | `**=` |
+
+### Comparison
+
+| Keyword | JS Output |
+|---|---|
+| `eq` | `===` |
+| `neq` / `not eq` | `!==` |
+| `lt` | `<` |
+| `gt` | `>` |
+| `le` / `lt eq` | `<=` |
+| `ge` / `gt eq` | `>=` |
+
+### Logical
+
+| Keyword | JS Output |
+|---|---|
+| `and` | `&&` |
+| `or` | `\|\|` |
+| `not` | `!` |
+
+### Nullish Coalescing
+
+| Keyword | JS Output |
+|---|---|
+| `coal` | `??` |
+
+### Pipeline
+
+| Keyword | JS Output |
+|---|---|
+| `pipe` | `b(a)` |
+
+## Type Keywords
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `as` | _(erased)_ | Type cast |
+| `of` | _(erased)_ | Type annotation |
+| `typeof` | `typeof` | Typeof operator |
+| `instanceof` | `instanceof` | Instance check |
+| `type` | _(erased)_ | Type alias |
+
+## Other
+
+| Keyword | JS Output |
+|---|---|
+| `new` | `new` |
+| `delete` | `delete` |
+| `this` | `this` |
+| `super` | `super` |
+| `throw` | `throw` |
+| `try` | `try` |
+| `catch` | `catch` |
+| `finally` | `finally` |
+| `pipe` | pipeline operator |
+| `list` | array literal |
+| `object` | object literal |
+| `nan` | `NaN` |
+| `infinity` | `Infinity` (`neg infinity` / `-infinity` → `-Infinity`) |
+
+## Class
+
+| Keyword | JS Output | Description |
+|---|---|---|
+| `class` | `class` | Class declaration |
+| `extends` | `extends` | Class inheritance |
+| `super` | `super` | Parent class reference |
+| `static` | `static` | Static method |
+| `private` | `#field` | Private field declaration |
+| `protected` | _(deprecated)_ | Deprecated alias for `private` |
+| `get` | `get` | Getter accessor |
+| `set` | `set` | Setter accessor |
+
+## Strings
+
+| Syntax | Description |
+|---|---|
+| `//;text;//` | String literal — **recommended** |
+| `///text///` | String literal — also valid (original syntax) |
+| `//;text [expr] text;//` | Interpolated string (recommended form) |
+| `///text [expr] text///` | Interpolated string (original form) |
+
+Both syntaxes produce identical JavaScript output. `//;...;//` is preferred for readability: the `;` delimiter does not conflict with `[expr]` interpolation, and `//` in content (e.g. URLs) is never confused with the closing `;//`.
+
+## Punctuation
+
+| Symbol | Meaning |
+|---|---|
+| `[` `]` | Brackets (calls, arrays, objects, grouping) |
+| `.` | Property access |
+| `\.` | Optional chaining (`?.`) |
+| `\` | Computed access prefix (inside `[...]`) |
+| `;` | Argument / element separator |
+| `,` | Array / object separator |
+| `..` | Inclusive range |
+| `...` | Exclusive range |
