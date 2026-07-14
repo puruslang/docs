@@ -47,8 +47,11 @@ data.method(arg)
 ```purus
 const x be 42
 let y be 10
-y be 20
 ```
+
+:::caution
+裸の識別子への再代入（`y be 20`）は**コンパイルエラー**です（[構文の概要](/ja/reference/syntax/)参照）。プロパティ・インデックス（`obj.x be 1`、`arr[\0] be 1`）と分割代入（`[a; b] be [b; a]`）は宣言キーワードなしで代入でき、可変の変数の更新には複合代入（`y add be 10`）を使います。
+:::
 
 ## 複合代入
 
