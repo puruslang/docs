@@ -47,8 +47,11 @@ data.method(arg)
 ```purus
 const x be 42
 let y be 10
-y be 20
 ```
+
+:::caution
+Reassigning a bare identifier (`y be 20`) is a **compile error** — see [Syntax Overview](/reference/syntax/). Property and index targets (`obj.x be 1`, `arr[\0] be 1`) and destructuring (`[a; b] be [b; a]`) assign without a declaration keyword, and mutable variables are updated with compound assignment (`y add be 10`).
+:::
 
 ## Compound Assignment
 
